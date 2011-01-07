@@ -1,0 +1,32 @@
+Author:  Alan Reiner
+Date:    05 Jan, 2011
+
+
+This CUDA code is a very basic Mandlebrot generator using CUDA (NVIDIA gfx card)
+The code is kind of sloppy, and simplistic (though Mandlebrots aren't difficult
+to code, at all), but it works if you have CUDA installed and a newer NVIDIA
+graphics card.  Eventually, as I learn more about fractals, I will expand this
+library to generate more types of fractals.
+
+To learn more about CUDA, or to download more of the files you need to compile
+this code, you can check out my other CUDA project on github, 
+      CUDA-Image-Processing
+
+
+If you are familiar with CUDA, you will realize that fractals are an absolutely
+*PERFECT" application for CUDA.  You don't have to pass in an image, only a few
+parameters that define the fractal, and the calculations are relatively simple,
+and completely parallelizable.  You should see the full advantage of your GPU 
+with this program.
+
+For reference, I put this same code together, though much more simply, in MATLAB
+and it took 632s to run (it probably wasn't efficient at all, but it did work).
+By comparison, I've put about the same amount of sloppy effort into this CUDA
+code, and it runs in 0.026s.  
+
+Yes, that's a 24,000x speedup.  That is higher than the theoretical limit for a
+CUDA card that only has 10,000 threads, but there's also a lot of overhead with
+the simplistic MATLAB code.  A mandlebrot generator that came with the CUDA SDK
+shows about 1000x speedup over C++, which is a bit more reasonable.  Typically,
+for image processing in general, you would expect to see somewhere between 20x
+and 200x. 
