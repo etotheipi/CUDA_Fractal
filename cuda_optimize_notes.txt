@@ -1,0 +1,24 @@
+Based on fractal-gen program
+
+Basic mandlebrot, one 2048x2048 tile;
+   Single-precision calc only:    0.034 s 
+   Double-precision calc only:    0.114 s
+
+   Single-precision w/ mem copy:  0.051 s 
+   Double-precision w/ mem copy:  0.145 s
+
+
+Basic mandlebrot, one 4096x4096 tile;
+
+   Single-precision w/ mem copy:  0.195 s
+   Double-precision w/ mem copy:  0.562 s
+
+   Double-precision with full precision log2f  
+                                  0.564 s
+
+
+With cudaComplex<T> class, 4096x4096 tile (5-10% speed decrease):
+
+   Single-precision : 0.202 s
+   Double-precision : 0.624 s
+

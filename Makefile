@@ -38,7 +38,7 @@ EXECUTABLE	:= fractal_gen
 # CUDA source files (compiled with cudacc)
 CUFILES		:= main.cu cudaUtilities.cu fractal_kernel.cu
 # CUDA dependency files
-CU_DEPS		:= cudaImageHost.h cudaImageDevice.h.cu cudaUtilities.h.cu fractal_kernel.h.cu
+CU_DEPS		:= cudaImageHost.h cudaImageDevice.h.cu ComplexNumber.h cudaComplex.h.cu cudaUtilities.h.cu fractal_kernel.h.cu
 # C/C++ source files (compiled with gcc / c++)
 CCPFILES		:= 
 

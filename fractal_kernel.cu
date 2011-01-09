@@ -11,44 +11,10 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 #include "fractal_kernel.h.cu"
+#include "cudaComplex.h.cu"
 
 
-__device__ inline void IFS(VALUE & znplus1Re,
-                           VALUE & znplus1Im,
-                           VALUE const & znRe,
-                           VALUE const & znIm,
-                           VALUE const & cRe,
-                           VALUE const & cIm)
-                                    
-{
-   VALUE re = znRe*znRe - znIm*znIm + cRe; 
-   VALUE im = 2*znRe*znIm + cIm;
-   znplus1Re = re;
-   znplus1Im = im;
-}
-
-
-// Separating out into a separate function really isn't necessary...
-__device__ inline int MandlebrotIterator( VALUE const & cRe, 
-                                          VALUE const & cIm,
-                                          int   const & iterMaxEsc)
-                                     
-{
-   // First iteration
-   VALUE znRe = cRe;
-   VALUE znIm = cIm;
-   
-   int t;
-   for(t=1; t<iterMaxEsc; t++)
-   {
-      if(znRe*znRe + znIm*znIm < 4.0)
-         IFS(znRe, znIm, znRe, znIm, cRe, cIm);
-      else
-         break; // TODO: this will create divergent branches, try ghost code
-   }
-
-   return t;
-}
+//__device__ void IFS_Mandlebrot(Complex 
 
 
 __global__ void GenerateFractalTile( VALUE *devOutPtr,
@@ -61,6 +27,42 @@ __global__ void GenerateFractalTile( VALUE *devOutPtr,
                                      VALUE  tileStepIm,
                                      int    iterMaxEsc)
 {
+   const int tileRow = blockDim.x*blockIdx.x + threadIdx.x;
+   const int tileCol = blockDim.y*blockIdx.y + threadIdx.y;
+   const int tileIdx = IDX_1D(tileRow, tileCol, nTileCols);   
+
+   // This thread corresponds to a single point in the complex plane
+   cudaComplex<VALUE> c( tileMinRe + tileCol*tileStepRe,
+                     tileMinIm + tileRow*tileStepIm);
+
+   cudaComplex<VALUE> temp(0,0);
+
+   // First iteration
+   cudaComplex<VALUE> zn = c;
+
+
+   int time;
+   for(time=1; time<iterMaxEsc; time++)
+   {
+      if(zn.conj_sq() < 4.0)
+      {
+         temp = zn*zn + c;
+         zn = temp;
+      }
+      else
+         break; // TODO: this will create divergent branches, try ghost code
+   }
+
+   // Not sure if I need/should sync threads.  I think coalesced global mem 
+   // accesses work better if all the threads are ready to do it at once...
+   __syncthreads();
+
+   devOutPtr[tileIdx] = log2f((float)time);
+
+
+
+   // Original code without complex numbers
+   /*
    const int tileRow = blockDim.x*blockIdx.x + threadIdx.x;
    const int tileCol = blockDim.y*blockIdx.y + threadIdx.y;
    const int tileIdx = IDX_1D(tileRow, tileCol, nTileCols);   
@@ -93,7 +95,8 @@ __global__ void GenerateFractalTile( VALUE *devOutPtr,
    // accesses work better if all the threads are ready to do it at once...
    __syncthreads();
 
-   devOutPtr[tileIdx] = __logf(time);
+   devOutPtr[tileIdx] = log2f((float)time);
+   */
 
 }
                                     

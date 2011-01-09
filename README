@@ -1,5 +1,43 @@
-Author:  Alan Reiner
-Date:    05 Jan, 2011
+
+Author:     Alan Reiner
+Orig Date:  05 Jan, 2011
+
+
+---------------------
+Update 09 Jan, 2011
+
+** Added the cudaComplex<T> class: 
+         Can be run by devices of CUDA compute 2.0 or higher.  Using this, 
+         I can use complex numbers as native, algebraic objects, and will 
+         be able to implement any kind of IFS fractal, now.  Using the new
+         cudaComplex<T> class increases computation time by about 5-10%
+         (though, still about 20,000x faster than MATLAB with complex numbers)
+         
+         Manual complex-multiplication in kernel (4096x4096 tile, 1024 max esc):
+         ---Single-precision w/ mem copy:  0.195 s
+         ---Double-precision w/ mem copy:  0.562 s
+
+         Using cudaComplex<T> (4096x4096 tile, 1024 max esc):
+         ---Single-precision w/ mem copy:  0.202 s
+         ---Double-precision w/ mem copy:  0.624 s
+
+
+** Complex<T> class:
+         This was a regular C++ implementation of the cudaComplex<T> before
+         I realized that it needed to be converted to __device__ code.  I left
+         this class in the project even though it's completely redundant w.r.t.
+         to std::complex<T>
+
+** Quaternion Class:
+         I implemented this in the most tedious way possible, to later realize
+         it's probably completely unnecessary.  It hasn't been compiled or
+         tested in any way, I just wanted to get the non-commutative algebra in
+         there.  I should be able to use them for higher-dimensional fractals,
+         later.
+
+
+
+---------------------
 
 
 This CUDA code is a very basic Mandlebrot generator using CUDA (NVIDIA gfx card)

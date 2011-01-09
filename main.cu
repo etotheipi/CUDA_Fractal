@@ -33,15 +33,18 @@
 
 #include "cudaImageHost.h"
 #include "cudaImageDevice.h.cu"
+#include "ComplexNumber.h"
+#include "cudaComplex.h.cu"
 #include "fractal_kernel.h.cu"
 
 using namespace std;
 
 unsigned int timer;
 
-#define SIZE_TILE 2048
+#define SIZE_TILE 4096
 
-int runDevicePropertiesQuery(void);
+int  runDevicePropertiesQuery(void);
+void runComplexUnitTests(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -52,13 +55,17 @@ int runDevicePropertiesQuery(void);
 ////////////////////////////////////////////////////////////////////////////////
 int main( int argc, char** argv) 
 {
+
+   runComplexUnitTests();
+
+
    cout << "\n********************************************************************************" << endl;
    cout << "***Starting CUDA-accelerated fractal generation" << endl << endl;
 
    // Always do this first, as a sanity check:
    runDevicePropertiesQuery();
 
-   int resRe = 2048;
+   int resRe = 4096*1;
    int resIm = resRe;
 
    VALUE minRe = -2;
@@ -82,8 +89,8 @@ int main( int argc, char** argv)
    //        write out separate files for each tile
    //        For now, only going to do one tile, so I don't have to
    //        worry about it
-   cudaImageHost<float>   hostTile(SIZE_TILE, SIZE_TILE);
-   cudaImageDevice<float>  devTile(SIZE_TILE, SIZE_TILE);
+   cudaImageHost<VALUE>   hostTile(SIZE_TILE, SIZE_TILE);
+   cudaImageDevice<VALUE>  devTile(SIZE_TILE, SIZE_TILE);
 
    int bx = 16;
    int by = 16;
@@ -113,7 +120,7 @@ int main( int argc, char** argv)
          VALUE tileMinIm = minIm + tileIm*tileStepIm;
 
          cout << "Generating tile (" << tileRe << "," << tileIm << ")...";
-         cpuStartTimer();
+         gpuStartTimer();
          GenerateFractalTile<<<GRID, BLOCK>>>( devTile,
                                                SIZE_TILE,
                                                SIZE_TILE,
@@ -121,9 +128,9 @@ int main( int argc, char** argv)
                                                tileMinIm,
                                                pixelStepRe,
                                                pixelStepIm,
-                                               256) ;
+                                               1024) ;
          devTile.copyToHost(hostTile);
-         accumFractalTime += cpuStopTimer();
+         accumFractalTime += gpuStopTimer();
 
          
          cpuStartTimer();
@@ -195,4 +202,43 @@ int runDevicePropertiesQuery(void)
    cout << "****************************************";
    cout << "***************************************" << endl;
    return selectedDevice;
+
 }
+
+
+void runComplexUnitTests(void)
+{
+
+   Complex<float> c1;
+   c1.real() =  1.0f;
+   c1.imag() = -2.0f;
+   cout << "\tDefault constructor (c1):  1-2i ?  " << c1 << endl;
+
+
+   Complex<float> c2(3.0f);
+   cout << "\tConstruct with real (c2):  3+0i ?  " << c2 << endl;
+
+   Complex<float> c3(-1.0f, 9.0f);
+   cout << "\tFull constructor:   (c3)  -1+9i ?  " << c3 << endl;
+
+
+   cout << "\tc1+c3:  " << (c1+c3) << endl;
+   cout << "\tc1-c3:  " << (c1-c3) << endl;
+   cout << "\tc1*c3:  " << (c1*c3) << endl;
+   cout << "\tc1/c3:  " << (c1/c3) << endl;
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
