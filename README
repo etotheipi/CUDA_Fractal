@@ -33,6 +33,22 @@ applications (like image processing).  However, this program demonstrates that
 sometimes you can achieve even more than that (10,000x?) if your problem is 
 just right.  
 
+---------------------
+Update 13 Jan, 2011
+
+Added a Colormap class for defining what colors you want in the output png.
+Will eventually implement the capability to supply N colors, and a 256x3
+colormap will be constructed by spreading out those three colors across the
+spectrum of gray values and interpolating the missing ones.  An example cmap
+is provided, via cmap_blue_green.txt
+
+Also implemented more useful tiling to the rendering process.  Rather than
+writing each CUDA tile to a separate file, it now allocates one large host
+image and writes each CUDA tile to the host RAM.  This assumes that you are
+rendering an image that is too big for your GFX card, but will fit in host
+RAM.  I changed this because it looks like there's nothing useful to come
+out of writing separate files (no print shop will be able to do anything 
+with a sequence of files...)
 
 ---------------------
 Update 12 Jan, 2011

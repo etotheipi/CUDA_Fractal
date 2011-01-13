@@ -66,7 +66,7 @@ int main( int argc, char** argv)
    // Always do this first, as a sanity check:
    runDevicePropertiesQuery();
 
-   int resRe = SIZE_TILE*1;
+   int resRe = 8192*1;
    int resIm = resRe;
 
    VALUE minRe = -2;
@@ -85,18 +85,22 @@ int main( int argc, char** argv)
    VALUE tileStepRe = (maxRe - minRe) / nTilesRe;
    VALUE tileStepIm = (maxIm - minIm) / nTilesIm;
 
+   const int tileSizeX = (resRe < SIZE_TILE ? resRe : SIZE_TILE);
+   const int tileSizeY = (resIm < SIZE_TILE ? resIm : SIZE_TILE);
+
    // TODO:  Need to figure out how to handle remarkably large images
    //        Probably need to not only process separately, but also
    //        write out separate files for each tile
    //        For now, only going to do one tile, so I don't have to
    //        worry about it
-   cudaImageHost<VALUE>   hostTile(SIZE_TILE, SIZE_TILE);
-   cudaImageDevice<VALUE>  devTile(SIZE_TILE, SIZE_TILE);
+   cudaImageHost<VALUE>    wholeFractal(resRe, resIm);
+   cudaImageHost<VALUE>    hostTile(tileSizeX, tileSizeY);
+   cudaImageDevice<VALUE>  devTile(tileSizeX, tileSizeY);
 
    int bx = 16;
    int by = 16;
-   int gx = SIZE_TILE / bx;
-   int gy = SIZE_TILE / by;
+   int gx = tileSizeX / bx;
+   int gy = tileSizeY / by;
    dim3 BLOCK(bx, by, 1);
    dim3 GRID( gx, gy, 1);
 
@@ -110,6 +114,12 @@ int main( int argc, char** argv)
         << "\t... in a grid....    (" << gx << "," << gy << ",1) blocks\n\n";
    
    cout << "Starting actual fractal calculation..." << endl;
+
+
+   // Create a colormap for the PNG file to saved with
+   Colormap cmap("cmap_blue_green.txt");
+
+   // Now actually start the rendering
    float accumFractalTime = 0.0f;
    float accumFileWriteTime = 0.0f;
    char* fn = new char[256];
@@ -120,10 +130,9 @@ int main( int argc, char** argv)
          VALUE tileMinRe = minRe + tileRe*tileStepRe;
          VALUE tileMinIm = minIm + tileIm*tileStepIm;
 
-         cout << "Generating tile (" << tileRe << "," << tileIm << ")...";
+         cout << "Generating tile (" << tileRe << "," << tileIm << ")..." << endl;
          gpuStartTimer();
-         GenerateJuliaTile<<<GRID, BLOCK>>>( 
-                                               devTile,
+         GenerateJuliaTile<<<GRID, BLOCK>>>(   devTile,
                                                -0.8,
                                                -0.156,
                                                SIZE_TILE,
@@ -133,20 +142,32 @@ int main( int argc, char** argv)
                                                pixelStepRe,
                                                pixelStepIm,
                                                1024) ;
+
          devTile.copyToHost(hostTile);
+
+         // Copy this tile into the master fractal 
+         int startRow = tileIm*SIZE_TILE;
+         int startCol = tileRe*SIZE_TILE;
+         for(int r=0; r<SIZE_TILE; r++)
+            for(int c=0; c<SIZE_TILE; c++)
+               wholeFractal(startRow+r,startCol+c) = hostTile(r,c);
+
          accumFractalTime += gpuStopTimer();
 
          
-         cpuStartTimer();
-         sprintf(fn, "fractal_%03dR_%03dI.png", tileRe, tileIm);
-         cout << "writing to file " << string(fn) << "..." << endl;
-         writePngFile( hostTile.getDataPtr(),
-                       hostTile.numRows(), 
-                       hostTile.numCols(), 
-                       fn);
-         accumFileWriteTime += cpuStopTimer();
       }
    }
+
+   // Write the host tile to png file
+   cpuStartTimer();
+   sprintf(fn, "fractal_%dx%d.png", resRe, resIm);
+   cout << "writing to file " << string(fn) << "..." << endl;
+   writePngFile( wholeFractal.getDataPtr(),
+                 wholeFractal.numRows(), 
+                 wholeFractal.numCols(), 
+                 fn,
+                 &cmap);
+   accumFileWriteTime += cpuStopTimer();
 
    cout << endl << endl;
    cout << "\tTime to render entire fractal: "

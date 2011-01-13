@@ -5,9 +5,59 @@
 #include <png.h>
 
 
+// class Colormap:
+//    Stores a 256x3 matrix of values which defines how to map gray levels
+//    to color information
+class Colormap
+{
+public:
+   unsigned char* mapData_;
+
+   // Default constructor : don't do anything
+   Colormap(void) : mapData_(NULL) {}
+
+   // Constructor:  load a colormap from file
+   //    If the file contains map information in the range float[0,1] we 
+   //    need to convert it to (unsigned char)[0,255].  The float[0,1] form
+   //    is the way MATLAB stores colormap data
+   Colormap(string filename, bool fileFloats0to1=true)
+   {
+      mapData_ = new unsigned char[768];
+      ifstream is(filename.c_str(), ios::in);
+      double temp;
+      for(int row=0; row<256; row++)
+      {
+         for(int col=0; col<3; col++)
+         {
+            is >> temp;
+            if(fileFloats0to1)
+               temp = 256.0*(temp >= 0.999 ? 0.999 : temp);
+            mapData_[row*3 + col] = (unsigned char)temp;
+         }
+      }
+   }
+
+
+   ~Colormap(void) { if(mapData_!=NULL) delete[] mapData_;}
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+//
+// Write a matrix of data to a png file.  Default is grayscale.  Can create
+// and supply pointer to a colormap to add color
+//
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
 
 template<typename T>
-void writePngFile(T const * data, int NROWS, int NCOLS, string filename)
+void writePngFile(T const * data, 
+                  int NROWS, 
+                  int NCOLS, 
+                  string filename,
+                  Colormap* cmap=NULL)
 {
 
    // Pull "raw" data out of the img
@@ -43,10 +93,19 @@ void writePngFile(T const * data, int NROWS, int NCOLS, string filename)
          tempGrey = (int)(256.0 * (val - minVal) / dynRng);
          tempGrey = (tempGrey > 255 ? 255 : tempGrey);
        
-         // For now, just write out red images, to verify byte-order/endianness
-         row_pointers[row][3*col+0] = tempGrey;
-         row_pointers[row][3*col+1] = 0;
-         row_pointers[row][3*col+2] = 0;
+         if(cmap == NULL)
+         {
+            // For now, just write out red images, to verify byte-order/endianness
+            row_pointers[row][3*col+0] = tempGrey;
+            row_pointers[row][3*col+1] = tempGrey;
+            row_pointers[row][3*col+2] = tempGrey;
+         }
+         else
+         {
+            row_pointers[row][3*col+0] = cmap->mapData_[tempGrey*3 + 0];
+            row_pointers[row][3*col+1] = cmap->mapData_[tempGrey*3 + 1];
+            row_pointers[row][3*col+2] = cmap->mapData_[tempGrey*3 + 2];
+         }
       }
    }
 
