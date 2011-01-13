@@ -4,6 +4,71 @@ Orig Date:  05 Jan, 2011
 
 
 ---------------------
+
+
+This CUDA code is a very basic fractal generator using CUDA (NVIDIA gfx card)
+The code is kind of sloppy, and simplistic (though Mandlebrots and Julia sets 
+aren't difficult), but it works if you have CUDA installed and a newer NVIDIA
+graphics card.  Eventually, as I learn more about fractals, I will expand this
+library to generate more types of fractals.
+
+To learn more about CUDA, or to download more of the files you need to compile
+this code, you can check out my other CUDA project on github, 
+      CUDA-Image-Processing
+
+
+If you are familiar with CUDA, you will realize that fractals are an absolutely
+*PERFECT" application for CUDA.  You don't have to pass in an image, only a few
+parameters that define the fractal, and the calculations are relatively simple
+and completely parallelizable.  You should see the full advantage of your GPU 
+with this program.
+
+For reference, I put this same code together, though much more simply, in MATLAB
+using MATLAB complex numbers and it took 632s to generate a 2048x2048 Mandlebrot
+with max escape time of 256.  By comparison, a 8192x8192 Mandlebrot with max 
+escape time of 1024 took less than 1 second using this code.  Epic!
+
+Typically you would expect 20x-200x speedup from CUDA for most parallelizable
+applications (like image processing).  However, this program demonstrates that
+sometimes you can achieve even more than that (10,000x?) if your problem is 
+just right.  
+
+
+---------------------
+Update 12 Jan, 2011
+
+** Added Julia Sets:
+         Julia sets turned out to be very closely related to the Mandlebrot,
+         and it was actually only a couple extra lines of code to modify the 
+         kernel to do Julia instead.  This also gives me the possibility of
+         doing 3D fractals by varying the c parameter.  However, this may not
+         be desired, since it seems most Julia sets are rich enough in two
+         dimensions.
+
+** Added writePngFile():
+         I finally succeeded in harnessing the libpng[12] library to write
+         png files directly from the main() function, without every going
+         through MATLAB.  Bypassing MATLAB saves a lot of time and RAM.  
+         
+** createcolormap.m:
+         I created a MATLAB method for exploring colormaps.  It creates a
+         256x3 matrix of colors, one for each gray level, to be applied to
+         an image loaded in MATLAB.  Given the completion of writePngFile()
+         this won't be so useful as a MATLAB script, but will soon be adapted
+         to C++ so that it can be used in the writePngCode() to add color 
+         via the C++ code.
+
+** cudaQuaternion<T> class:
+         Extends complex numbers to four dimensions. Originally planned to 
+         use quaternions for 3D Mandlebrot, but found out the there is no
+         such thing (or, rather, the Mandlebrot is pretty boring in higher
+         dimensions).  However, these may be useful for other kinds of
+         fractals...
+
+
+---------------------
+
+
 Update 09 Jan, 2011
 
 ** Added the cudaComplex<T> class: 
@@ -11,7 +76,8 @@ Update 09 Jan, 2011
          I can use complex numbers as native, algebraic objects, and will 
          be able to implement any kind of IFS fractal, now.  Using the new
          cudaComplex<T> class increases computation time by about 5-10%
-         (though, still about 20,000x faster than MATLAB with complex numbers)
+         (prob due to extra memory alloc/dealloc due to operators returning
+         copies of the answers, instead of writing directly to a var)
          
          Manual complex-multiplication in kernel (4096x4096 tile, 1024 max esc):
          ---Single-precision w/ mem copy:  0.195 s
@@ -37,34 +103,3 @@ Update 09 Jan, 2011
 
 
 
----------------------
-
-
-This CUDA code is a very basic Mandlebrot generator using CUDA (NVIDIA gfx card)
-The code is kind of sloppy, and simplistic (though Mandlebrots aren't difficult
-to code, at all), but it works if you have CUDA installed and a newer NVIDIA
-graphics card.  Eventually, as I learn more about fractals, I will expand this
-library to generate more types of fractals.
-
-To learn more about CUDA, or to download more of the files you need to compile
-this code, you can check out my other CUDA project on github, 
-      CUDA-Image-Processing
-
-
-If you are familiar with CUDA, you will realize that fractals are an absolutely
-*PERFECT" application for CUDA.  You don't have to pass in an image, only a few
-parameters that define the fractal, and the calculations are relatively simple,
-and completely parallelizable.  You should see the full advantage of your GPU 
-with this program.
-
-For reference, I put this same code together, though much more simply, in MATLAB
-and it took 632s to run (it probably wasn't efficient at all, but it did work).
-By comparison, I've put about the same amount of sloppy effort into this CUDA
-code, and it runs in 0.026s.  
-
-Yes, that's a 24,000x speedup.  That is higher than the theoretical limit for a
-CUDA card that only has 10,000 threads, but there's also a lot of overhead with
-the simplistic MATLAB code.  A mandlebrot generator that came with the CUDA SDK
-shows about 1000x speedup over C++, which is a bit more reasonable.  Typically,
-for image processing in general, you would expect to see somewhere between 20x
-and 200x. 

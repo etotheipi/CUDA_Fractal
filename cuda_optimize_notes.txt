@@ -22,3 +22,12 @@ With cudaComplex<T> class, 4096x4096 tile (5-10% speed decrease):
    Single-precision : 0.202 s
    Double-precision : 0.624 s
 
+
+
+Now compare cudaComplex<T> with cudaQuaternion<T>
+
+   Double-precision complex:   0.631 s
+   Double-precision quatern:   1.503 s
+
+
+

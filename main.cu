@@ -30,12 +30,15 @@
 #include <cutil_inline.h>
 #include <stopwatch.h>
 #include <cmath>
+#include <assert.h>
+
 
 #include "cudaImageHost.h"
 #include "cudaImageDevice.h.cu"
 #include "ComplexNumber.h"
 #include "cudaComplex.h.cu"
 #include "fractal_kernel.h.cu"
+#include "writePNG.h"
 
 using namespace std;
 
@@ -44,7 +47,7 @@ unsigned int timer;
 #define SIZE_TILE 4096
 
 int  runDevicePropertiesQuery(void);
-void runComplexUnitTests(void);
+void writePngFile(cudaImageHost<VALUE> img);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -56,21 +59,19 @@ void runComplexUnitTests(void);
 int main( int argc, char** argv) 
 {
 
-   runComplexUnitTests();
-
-
    cout << "\n********************************************************************************" << endl;
-   cout << "***Starting CUDA-accelerated fractal generation" << endl << endl;
+   cout << "***Starting CUDA-accelerated fractal generation" << endl;
+   cout << "***NOTE:  This uses CUDA OOP which relies on CUDA Capability 2.0+" << endl << endl;
 
    // Always do this first, as a sanity check:
    runDevicePropertiesQuery();
 
-   int resRe = 4096*1;
+   int resRe = SIZE_TILE*1;
    int resIm = resRe;
 
    VALUE minRe = -2;
    VALUE minIm = -2;
-   VALUE maxRe =  1;
+   VALUE maxRe =  2;
    VALUE maxIm =  2;
 
 
@@ -121,7 +122,10 @@ int main( int argc, char** argv)
 
          cout << "Generating tile (" << tileRe << "," << tileIm << ")...";
          gpuStartTimer();
-         GenerateFractalTile<<<GRID, BLOCK>>>( devTile,
+         GenerateJuliaTile<<<GRID, BLOCK>>>( 
+                                               devTile,
+                                               -0.8,
+                                               -0.156,
                                                SIZE_TILE,
                                                SIZE_TILE,
                                                tileMinRe,
@@ -134,9 +138,12 @@ int main( int argc, char** argv)
 
          
          cpuStartTimer();
-         sprintf(fn, "fractal_%03dR_%03dI.txt", tileRe, tileIm);
+         sprintf(fn, "fractal_%03dR_%03dI.png", tileRe, tileIm);
          cout << "writing to file " << string(fn) << "..." << endl;
-         hostTile.writeFile(fn);
+         writePngFile( hostTile.getDataPtr(),
+                       hostTile.numRows(), 
+                       hostTile.numCols(), 
+                       fn);
          accumFileWriteTime += cpuStopTimer();
       }
    }
@@ -151,7 +158,6 @@ int main( int argc, char** argv)
    cudaThreadExit();
 }
 
-////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 // Query the devices on the system and select the fastest (or override the
@@ -202,32 +208,6 @@ int runDevicePropertiesQuery(void)
    cout << "****************************************";
    cout << "***************************************" << endl;
    return selectedDevice;
-
-}
-
-
-void runComplexUnitTests(void)
-{
-
-   Complex<float> c1;
-   c1.real() =  1.0f;
-   c1.imag() = -2.0f;
-   cout << "\tDefault constructor (c1):  1-2i ?  " << c1 << endl;
-
-
-   Complex<float> c2(3.0f);
-   cout << "\tConstruct with real (c2):  3+0i ?  " << c2 << endl;
-
-   Complex<float> c3(-1.0f, 9.0f);
-   cout << "\tFull constructor:   (c3)  -1+9i ?  " << c3 << endl;
-
-
-   cout << "\tc1+c3:  " << (c1+c3) << endl;
-   cout << "\tc1-c3:  " << (c1-c3) << endl;
-   cout << "\tc1*c3:  " << (c1*c3) << endl;
-   cout << "\tc1/c3:  " << (c1/c3) << endl;
-
-
 
 }
 

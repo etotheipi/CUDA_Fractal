@@ -13,7 +13,7 @@
 #ifndef _FRACTAL_KERNEL_H_CU_
 #define _FRACTAL_KERNEL_H_CU_
 
-#define VALUE float
+#define VALUE double
 
 #include <iostream>
 #include "cudaConvUtilities.h.cu"
@@ -32,7 +32,21 @@ __device__ inline int MandlebrotIterator( VALUE const & cRe,
                                           int   const & timeMaxEsc);
                                      
 
-__global__ void GenerateFractalTile( VALUE* devOutPtr,
+__global__ void GenerateMandlebrotTile( 
+                                     VALUE* devOutPtr,
+                                     // TODO:  a lot of params, maybe const mem?
+                                     int    nTileRows,
+                                     int    nTileCols,
+                                     VALUE  tileMinRe,
+                                     VALUE  tileMinIm,
+                                     VALUE  tileStepRe,
+                                     VALUE  tileStepIm,
+                                     int    iterMaxEsc);
+
+__global__ void GenerateJuliaTile( 
+                                     VALUE *devOutPtr,
+                                     VALUE cRe,
+                                     VALUE cIm,
                                      // TODO:  a lot of params, maybe const mem?
                                      int    nTileRows,
                                      int    nTileCols,
@@ -42,6 +56,17 @@ __global__ void GenerateFractalTile( VALUE* devOutPtr,
                                      VALUE  tileStepIm,
                                      int    iterMaxEsc);
                                     
+// This is a completely failed attempt at producing cool 3D mandlebrot
+// This should probably be ignored
+__global__ void GenerateFractalTile3D( VALUE* devOutPtr,
+                                     // TODO:  a lot of params, maybe const mem?
+                                     int    nTileRows,
+                                     int    nTileCols,
+                                     VALUE  tileMinRe,
+                                     VALUE  tileMinIm,
+                                     VALUE  tileStepRe,
+                                     VALUE  tileStepIm,
+                                     int    iterMaxEsc);
 
 
 #endif
