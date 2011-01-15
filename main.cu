@@ -58,6 +58,22 @@ void writePngFile(cudaImageHost<VALUE> img);
 ////////////////////////////////////////////////////////////////////////////////
 int main( int argc, char** argv) 
 {
+   VALUE cReal, cImag;
+   
+   
+   if(argc < 3)
+   {
+      cReal = -0.8;
+      cImag = -0.156;
+      cout << "USAGE:  " << argv[0] << " [cReal cImag]" << endl;
+      cout << "         using    " << cReal << " and " << cImag << endl;
+      
+   }
+   else
+   {
+      cReal = strtod(argv[1], NULL);
+      cImag = strtod(argv[2], NULL);
+   }
 
    cout << "\n********************************************************************************" << endl;
    cout << "***Starting CUDA-accelerated fractal generation" << endl;
@@ -66,7 +82,7 @@ int main( int argc, char** argv)
    // Always do this first, as a sanity check:
    runDevicePropertiesQuery();
 
-   int resRe = 8192*1;
+   int resRe = SIZE_TILE*2;
    int resIm = resRe;
 
    VALUE minRe = -2;
@@ -114,6 +130,7 @@ int main( int argc, char** argv)
         << "\t... in a grid....    (" << gx << "," << gy << ",1) blocks\n\n";
    
    cout << "Starting actual fractal calculation..." << endl;
+   cout << "\t Creating julia set with c="<<cReal<<" + " <<cImag<<"i"<< endl;
 
 
    // Create a colormap for the PNG file to saved with
@@ -133,8 +150,9 @@ int main( int argc, char** argv)
          cout << "Generating tile (" << tileRe << "," << tileIm << ")..." << endl;
          gpuStartTimer();
          GenerateJuliaTile<<<GRID, BLOCK>>>(   devTile,
-                                               -0.8,
-                                               -0.156,
+                                               // -0.8, -0.156 is my favorite, so far
+                                               cReal,
+                                               cImag,
                                                SIZE_TILE,
                                                SIZE_TILE,
                                                tileMinRe,
@@ -144,6 +162,7 @@ int main( int argc, char** argv)
                                                1024) ;
 
          devTile.copyToHost(hostTile);
+         accumFractalTime += gpuStopTimer();
 
          // Copy this tile into the master fractal 
          int startRow = tileIm*SIZE_TILE;
@@ -152,7 +171,6 @@ int main( int argc, char** argv)
             for(int c=0; c<SIZE_TILE; c++)
                wholeFractal(startRow+r,startCol+c) = hostTile(r,c);
 
-         accumFractalTime += gpuStopTimer();
 
          
       }
