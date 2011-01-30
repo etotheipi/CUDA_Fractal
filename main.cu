@@ -134,7 +134,7 @@ int main( int argc, char** argv)
 
 
    // Create a colormap for the PNG file to saved with
-   Colormap cmap("cmap_blue_green.txt");
+   Colormap cmap("cmap_green_red.txt");
 
    // Now actually start the rendering
    float accumFractalTime = 0.0f;
@@ -186,6 +186,8 @@ int main( int argc, char** argv)
                  fn,
                  &cmap);
    accumFileWriteTime += cpuStopTimer();
+
+   //wholeFractal.writeFile("fractal.txt");
 
    cout << endl << endl;
    cout << "\tTime to render entire fractal: "

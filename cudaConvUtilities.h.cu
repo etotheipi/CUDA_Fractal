@@ -8,15 +8,9 @@
 #include <cutil_inline.h>
 #include <stopwatch.h>
 #include "cudaImageHost.h"
-
-#define IDX_1D(Row, Col, stride) ((Row * stride) + Col)
-#define ROW_2D(index, stride) (index / stride)
-#define COL_2D(index, stride) (index % stride)
-#define ROUNDUP32(integer) ( ((integer-1)/32 + 1) * 32 )
+#include "cudaUtilities.h.cu"
 
 #define SHMEM 8192
-#define FLOAT_SZ sizeof(float)
-#define INT_SZ   sizeof(int)
 
 using namespace std;
 

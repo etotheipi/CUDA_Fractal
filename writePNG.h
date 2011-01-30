@@ -3,44 +3,8 @@
 
 #include <string.h>
 #include <png.h>
+#include "colormap.h"
 
-
-// class Colormap:
-//    Stores a 256x3 matrix of values which defines how to map gray levels
-//    to color information
-class Colormap
-{
-public:
-   unsigned char* mapData_;
-
-   // Default constructor : don't do anything
-   Colormap(void) : mapData_(NULL) {}
-
-   // Constructor:  load a colormap from file
-   //    If the file contains map information in the range float[0,1] we 
-   //    need to convert it to (unsigned char)[0,255].  The float[0,1] form
-   //    is the way MATLAB stores colormap data
-   Colormap(string filename, bool fileFloats0to1=true)
-   {
-      mapData_ = new unsigned char[768];
-      ifstream is(filename.c_str(), ios::in);
-      double temp;
-      for(int row=0; row<256; row++)
-      {
-         for(int col=0; col<3; col++)
-         {
-            is >> temp;
-            if(fileFloats0to1)
-               temp = 256.0*(temp >= 0.999 ? 0.999 : temp);
-            mapData_[row*3 + col] = (unsigned char)temp;
-         }
-      }
-   }
-
-
-   ~Colormap(void) { if(mapData_!=NULL) delete[] mapData_;}
-
-};
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -57,7 +21,7 @@ void writePngFile(T const * data,
                   int NROWS, 
                   int NCOLS, 
                   string filename,
-                  Colormap* cmap=NULL)
+                  colormap<float, 256>* cmap=NULL)
 {
 
    // Pull "raw" data out of the img
@@ -102,9 +66,9 @@ void writePngFile(T const * data,
          }
          else
          {
-            row_pointers[row][3*col+0] = cmap->mapData_[tempGrey*3 + 0];
-            row_pointers[row][3*col+1] = cmap->mapData_[tempGrey*3 + 1];
-            row_pointers[row][3*col+2] = cmap->mapData_[tempGrey*3 + 2];
+            row_pointers[row][3*col+0] = (unsigned int)cmap->cmapData_[IDX_RED  ][tempGrey];
+            row_pointers[row][3*col+1] = (unsigned int)cmap->cmapData_[IDX_GREEN][tempGrey];
+            row_pointers[row][3*col+2] = (unsigned int)cmap->cmapData_[IDX_BLUE ][tempGrey];
          }
       }
    }
@@ -219,5 +183,86 @@ void writePngFile(T const * data,
    free(row_pointers);
 }
 
+template<>
+void writePngFile<unsigned int>(unsigned int const * data, 
+                  int NROWS, 
+                  int NCOLS, 
+                  string filename,
+                  colormap<float, 256>* cmap)
+{
+   cout << NROWS << " " << NCOLS << endl;
+
+   // Create the png_byte** that the png_info struct will need
+   png_bytepp rptrs = (png_bytep *)malloc( sizeof(png_bytep) * NROWS);
+   for(int row=0; row<NROWS; row++)
+      rptrs[row] =  (png_byte *)malloc(sizeof(png_byte) * NCOLS * 3);
+
+   unsigned int tempGrey;
+   for(int row=0; row<NROWS; row++)
+   {
+      for(int col=0; col<NCOLS; col++)
+      {
+         tempGrey = data[row*NCOLS + col];
+     
+         if(cmap == NULL)
+         {
+            // For now, just write out red images, to verify byte-order/endianness
+            rptrs[row][3*col+0] = (unsigned int)tempGrey;
+            rptrs[row][3*col+1] = (unsigned int)tempGrey;
+            rptrs[row][3*col+2] = (unsigned int)tempGrey;
+         }
+         else
+         {
+            rptrs[row][3*col+0] = (unsigned int)cmap->cmapData_[IDX_RED  ][tempGrey];
+            rptrs[row][3*col+1] = (unsigned int)cmap->cmapData_[IDX_GREEN][tempGrey];
+            rptrs[row][3*col+2] = (unsigned int)cmap->cmapData_[IDX_BLUE ][tempGrey];
+         }
+      }
+   }
+
+   FILE *fp = fopen(filename.c_str(), "wb");
+   assert(fp);
+   
+   // Create PNG struct
+   png_structp png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, 
+                                                  (png_voidp)NULL, 
+                                                  NULL, 
+                                                  NULL);
+   assert(png_ptr);
+
+   // Create PNG info struct
+   png_infop info_ptr = png_create_info_struct(png_ptr);
+   if(!info_ptr)
+   {
+      png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
+      assert(0);
+   }
+
+   // Initialize I/O for PNG on the file
+   png_init_io(png_ptr, fp);
+
+   png_set_IHDR( png_ptr, 
+                 info_ptr, 
+                 NCOLS,
+                 NROWS,
+                 8, 
+                 PNG_COLOR_TYPE_RGB,
+                 PNG_INTERLACE_NONE,
+                 PNG_COMPRESSION_TYPE_DEFAULT, 
+                 PNG_FILTER_TYPE_DEFAULT);
+
+   int png_transforms = PNG_TRANSFORM_IDENTITY;
+
+
+   png_set_rows(png_ptr, info_ptr, rptrs);
+
+
+   png_write_png(png_ptr, info_ptr, png_transforms, NULL);
+
+
+   for(int row=0; row<NROWS; row++)
+      free(rptrs[row]);
+   free(rptrs);
+}
 
 #endif

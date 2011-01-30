@@ -34,14 +34,18 @@
 ################################################################################
 
 # Add source files here
-EXECUTABLE	:= fractal_gen
+EXECUTABLE	:= JuliaExplorer
 # CUDA source files (compiled with cudacc)
-CUFILES		:= main.cu cudaUtilities.cu fractal_kernel.cu
+CUFILES		:= main_gl.cu  cudaUtilities.cu 
 # CUDA dependency files
-CU_DEPS		:= cudaImageHost.h cudaImageDevice.h.cu ComplexNumber.h cudaComplex.h.cu cudaUtilities.h.cu fractal_kernel.h.cu writePNG.h
+CU_DEPS		:= cudaImageHost.h julia_kernel_cpu.h julia_kernel.h.cu colormap.h writePNG.h cudaUtilities.h.cu cudaComplex.h.cu
 # C/C++ source files (compiled with gcc / c++)
-CCPFILES		:= 
+CCPFILES		:=
 
+# Additional compiler flags and LIBs to include
+USEGLLIB         := 1
+USEGLUT          := 1
+#USERENDERCHECKGL := 1
 
 ################################################################################
 # Rules and targets

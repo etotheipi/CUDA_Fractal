@@ -58,10 +58,14 @@ public:
    //        calling code, and no extra copying is going on (we lose 5-10% of
    //        our computation speed due to these extra copies
 
-   //template<typename T2> friend cudaComplex operator+(T const & n2, cudaComplex const & z);
-   //template<typename T2> friend cudaComplex operator-(T const & n2, cudaComplex const & z);
-   //template<typename T2> friend cudaComplex operator*(T const & n2, cudaComplex const & z);
-   //template<typename T2> friend cudaComplex operator/(T const & n2, cudaComplex const & z);
+   __device__ friend cudaComplex operator+(float n2, cudaComplex const & z) { return cudaComplex( n2 + z.RE_,  z.IM_ ); }
+   __device__ friend cudaComplex operator-(float n2, cudaComplex const & z) { return cudaComplex( n2 - z.RE_, -z.IM_ ); }
+   __device__ friend cudaComplex operator*(float n2, cudaComplex const & z) { return cudaComplex( n2 * z.RE_, n2 * z.IM_ ); }
+   __device__ friend cudaComplex operator/(float n2, cudaComplex const & z) 
+   { 
+      T denom = z.RE_*z.RE_ + z.IM_*z.IM_;
+      return cudaComplex( n2*z.RE_ / denom, -n2*z.IM_ / denom);
+   }
 };
 
 template<typename T> __device__ inline cudaComplex<T> cudaComplex<T>::operator+(cudaComplex<T> const & z2) const { return cudaComplex<T>(RE_+z2.RE_, IM_+z2.IM_); }
@@ -77,10 +81,6 @@ template<typename T> __device__ inline cudaComplex<T> cudaComplex<T>::operator/(
    return out;
 }
 
-//template<typename T, typename T2> inline cudaComplex<T> cudaComplex<T>::operator+(T2 const & n2, cudaComplex<T> const & z) { return cudaComplex<T>(n2+z.RE,  z.IM_); }
-//template<typename T, typename T2> inline cudaComplex<T> cudaComplex<T>::operator-(T2 const & n2, cudaComplex<T> const & z) { return cudaComplex<T>(n2-z.RE, -z.IM_); }
-//template<typename T, typename T2> inline cudaComplex<T> cudaComplex<T>::operator*(T2 const & n2, cudaComplex<T> const & z) { return cudaComplex<T>(n2*z.RE, n2*z.IM_);}
-//template<typename T, typename T2> inline cudaComplex<T> cudaComplex<T>::operator/(T2 const & n2, cudaComplex<T> const & z) { return n2*(z.conj()) / z.conj_sq() ; }
 
 
 template<typename T> __device__ inline cudaComplex<T> cudaComplex<T>::zexp(void) const

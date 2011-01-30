@@ -2,6 +2,29 @@
 Author:     Alan Reiner
 Orig Date:  05 Jan, 2011
 
+Last Update:  30 Jan, 2011
+
+--------------------------------------------------------------------------------
+*** MAJOR UPDATE -- Integrated OpenGL with CUDA for interactive fractal viewing!
+--------------------------------------------------------------------------------
+Update 30 Jan, 2011
+
+The original fractal code in CUDA was combined with CUDA-OpenGL-interop code to
+allow for real-time passing of CUDA output to OpenGL for display and interaction
+(via video memory -- no need to pass image through host RAM).  I don't know how
+NVIDIA could've made this task any more complicated... But the torture is over, 
+and it works (LINUX ONLY -- no windows support yet).
+
+Also, the code compiles and runs for CUDA Compute Capability less than 2.0, and
+it actually loads without crashing, but it doesn't actually display a fractal.  
+So, for the time being, consider this code Fermi-only.
+
+With OpenGL installed, this produces a real-time Julia set.  Left-click-drag
+will pan the view, scroll wheel will zoom.  Right-clicking and dragging will
+adjust the C-parameter, which causes the fractal to morph in real time.  At
+this time, the colormap can only be changed via added a cmap*.txt file and 
+updating the code in main_gl.cu (and recompiling).
+
 
 ---------------------
 
@@ -32,6 +55,10 @@ Typically you would expect 20x-200x speedup from CUDA for most parallelizable
 applications (like image processing).  However, this program demonstrates that
 sometimes you can achieve even more than that (10,000x?) if your problem is 
 just right.  
+
+
+
+
 
 ---------------------
 Update 13 Jan, 2011

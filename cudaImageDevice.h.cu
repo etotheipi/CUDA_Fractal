@@ -8,6 +8,7 @@
 #include <cutil_inline.h>
 #include "cudaImageHost.h"
 
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 // A very simple class for creating, storing and deleting image in *DEVICE* RAM
@@ -26,10 +27,17 @@ private:
    void Allocate(int nRows, int nCols);
    void Deallocate(void);
 
+#ifdef CUDA_IMAGE_DEVICE_TRACKING
    // Keep a master list of device memory allocations
    static list<cudaImageDevice*> masterDevImageList_;
    typename list<cudaImageDevice*>::iterator trackingIter_;
-   static int totalDevMemUsed_;
+   static int calculateDeviceMemoryUsage(bool dispStdout=false);
+#endif
+
+   static int totalDeviceBytesUsed_;
+   static int getTotalDeviceBytesUsed(void) { return totalDeviceBytesUsed_; }
+   static int getTotalDeviceKBUsed(void) { return (totalDeviceBytesUsed_+512)/(1024); }
+   static int getTotalDeviceMBUsed(void) { return (totalDeviceBytesUsed_+524288)/(1024*1024); }
 
 public:
    void resize(int nRows, int nCols);
@@ -61,22 +69,24 @@ public:
 
    // Implicit cast to int* for functions that require int*
    operator DTYPE*() { return imgData_;}
-   static int calculateDeviceMemoryUsage(bool dispStdout=false);
 
-   DTYPE* getDataPtr(void) const {return imgData_;}
-   int  numRows(void)      const {return imgRows_;}
-   int  numCols(void)      const {return imgCols_;}
-   int  numElts(void)      const {return imgElts_;}
-   int  numBytes(void)     const {return imgBytes_;}
+   DTYPE* const & getDataPtr(void) const {return imgData_;}
+   int  numRows(void)        const {return imgRows_;}
+   int  numCols(void)        const {return imgCols_;}
+   int  numElts(void)        const {return imgElts_;}
+   int  numBytes(void)       const {return imgBytes_;}
 
 };
 
-// Initialize a master list that
+#ifdef CUDA_IMAGE_DEVICE_TRACKING
+   // Initialize a master list that
+   template<class DTYPE>
+   list<cudaImageDevice<DTYPE>*> cudaImageDevice<DTYPE>::masterDevImageList_ 
+                                             = list<cudaImageDevice<DTYPE>*>(0);
+#endif
+
 template<class DTYPE>
-list<cudaImageDevice<DTYPE>*> cudaImageDevice<DTYPE>::masterDevImageList_ 
-                                           = list<cudaImageDevice<DTYPE>*>(0);
-template<class DTYPE>
-int cudaImageDevice<DTYPE>::totalDevMemUsed_ = 0;
+int cudaImageDevice<DTYPE>::totalDeviceBytesUsed_ = 0;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -93,11 +103,13 @@ void cudaImageDevice<DTYPE>::Allocate(int nRows, int nCols)
    else
    {
       cudaMalloc((void**)&imgData_, imgBytes_);
-      totalDevMemUsed_ += imgBytes_;
+      totalDeviceBytesUsed_ += imgBytes_;
 
+#ifdef CUDA_IMAGE_DEVICE_TRACKING
       masterDevImageList_.push_back(this);
       trackingIter_ = masterDevImageList_.end();  // this is one-past-the-end
       trackingIter_--;
+#endif
 
       static int idVal = 99;
       idVal++;
@@ -112,13 +124,18 @@ void cudaImageDevice<DTYPE>::Deallocate(void)
    if(imgData_ != NULL)
    {
       cudaFree(imgData_);
-      totalDevMemUsed_ -= imgBytes_;
+
+      totalDeviceBytesUsed_ -= imgBytes_;
+
+#ifdef CUDA_IMAGE_DEVICE_TRACKING
       if(trackingIter_ != masterDevImageList_.end())
       {
          masterDevImageList_.erase(trackingIter_);
          trackingIter_ = masterDevImageList_.end();
       }
+#endif
    } 
+
    imgData_ = NULL;
    imgRows_ = imgCols_ = imgElts_ = imgBytes_ = 0;
 }
@@ -266,6 +283,7 @@ void cudaImageDevice<DTYPE>::copyToDevice(cudaImageDevice & devImg) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
+#ifdef CUDA_IMAGE_DEVICE_TRACKING
 template<class DTYPE>
 int cudaImageDevice<DTYPE>::calculateDeviceMemoryUsage(bool dispStdout)
 {
@@ -302,8 +320,9 @@ int cudaImageDevice<DTYPE>::calculateDeviceMemoryUsage(bool dispStdout)
       printf("\t\tTotal Device Memory Used:                  %4d.%04d MB\n\n", wholeMB, fracMB);
    }
    
-   return totalDevMemUsed_;
+   return totalDeviceBytesUsed_;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 template<class DTYPE>
