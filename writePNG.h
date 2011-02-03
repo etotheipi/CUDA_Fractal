@@ -1,9 +1,15 @@
 #ifndef _WRITE_PNG_H_
 #define _WRITE_PNG_H_
 
+
 #include <string.h>
 #include <png.h>
 #include "colormap.h"
+
+#ifdef _WIN32
+   template<typename T>
+   void writePngFile(T const *, int, int, string, colormap<float,256>*) { }
+#else
 
 
 
@@ -264,5 +270,7 @@ void writePngFile<unsigned int>(unsigned int const * data,
       free(rptrs[row]);
    free(rptrs);
 }
+
+#endif
 
 #endif

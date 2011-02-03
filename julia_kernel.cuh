@@ -10,28 +10,33 @@
 // techniques
 //
 ////////////////////////////////////////////////////////////////////////////////
-#ifndef _FRACTAL_KERNEL_H_CU_
-#define _FRACTAL_KERNEL_H_CU_
+#ifndef _JULIA_KERNEL_H_CU_
+#define _JULIA_KERNEL_H_CU_
 
 
 #include <iostream>
-#include "cudaConvUtilities.h.cu"
-#include "cudaComplex.h.cu"
+#include "cudaComplex.cuh"
+#include "cudaUtilities.cuh"
 
-
-//__constant__ unsigned char cmapDevConst[768];
 texture<unsigned int, 3, cudaReadModeElementType> tex_uint;
 textureReference const * tex_uint_ref;
 
 
-__device__ inline unsigned int getGrey(int time, int iterMaxEsc)
+void prepareCudaTexture(unsigned int* h_src, 
+                               cudaArray** d_dst,
+                               cudaExtent const & texExt);
+
+
+//////////
+__device__ unsigned int getGrey(int time, int iterMaxEsc)
 {
    float val0to1 = log2f((float)(time-1)) / log2f((float)iterMaxEsc); 
    unsigned int grey256 = (unsigned int)(256.0 * val0to1);
    return (grey256 << 16) | (grey256 << 8) | (grey256 << 0);
 }
 
-__device__ inline unsigned int getColor(int time, int iterMaxEsc)
+/////////
+__device__ unsigned int getColor(int time, int iterMaxEsc)
 {
    
    float val0to1 = log2f((float)(time-1)) / log2f((float)iterMaxEsc); 

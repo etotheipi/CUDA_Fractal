@@ -276,34 +276,6 @@ __global__ void  Morph3x3_##name##_Kernel(       \
 
 
 
-////////////////////////////////////////////////////////////////////////////////
-// CPU timer pretty much measures real time (wall clock time).  GPU timer 
-// measures based on the number of GPU clock cycles, which is useful for 
-// benchmarking memory copies and GFLOPs, but not wall time.
-void   cpuStartTimer(void);
-float  cpuStopTimer(void);
-void   gpuStartTimer(void);
-float  gpuStopTimer(void);
-
-////////////////////////////////////////////////////////////////////////////////
-// Read/Write images from/to files
-void ReadFile(string fn, int* targPtr, int nRows, int nCols);
-
-////////////////////////////////////////////////////////////////////////////////
-// Writing file in space-separated format
-void WriteFile(string fn, int* srcPtr, int nRows, int nCols);
-
-////////////////////////////////////////////////////////////////////////////////
-// Writing image to stdout
-void PrintArray(int* srcPtr, int nRows, int nCols);
-
-////////////////////////////////////////////////////////////////////////////////
-// Copy a 3D texture from a host (float*) array to a device cudaArray
-// The extent should be specified with all dimensions in units of *elements*
-void prepareCudaTexture(float* h_src, 
-                        cudaArray *d_dst,
-                        cudaExtent const texExtent);
- 
 
 // Assume target memory has already been allocated, nPixels is odd
 void createGaussian1D(float* targPtr, 

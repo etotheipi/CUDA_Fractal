@@ -128,11 +128,12 @@
 
 
 #include "cudaImageHost.h"
-#include "cudaImageDevice.h.cu"
+#include "cudaImageDevice.cuh"
 #include "julia_kernel_cpu.h"
-#include "julia_kernel.h.cu"
+#include "julia_kernel.cuh"
 #include "writePNG.h"
-#include "cudaUtilities.h.cu"
+#include "cudaUtilities.cuh"
+#include "colormap.h"
 
 using namespace std;
 
@@ -346,21 +347,11 @@ void myInitData(void)
    unsigned int cmapUint[768];
    currentCMAP.copyToLinearArrayColMajor(cmapUint);
 
-   
    // Put the colormap in CUDA texture memory
    // (yes, textures are also quite complicated)
-   cudaArray* caCmap;
-   cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<unsigned int>();
    cudaExtent texExt = make_cudaExtent(256,3,1);
-   cutilSafeCall( cudaMalloc3DArray(&caCmap, &channelDesc, texExt, 0) );
-   prepareCudaTexture(cmapUint, caCmap, texExt);
-   cudaGetTextureReference(&tex_uint_ref, "tex_uint");
-   tex_uint.addressMode[0] = cudaAddressModeClamp;
-   tex_uint.addressMode[0] = cudaAddressModeClamp;
-   tex_uint.addressMode[0] = cudaAddressModeClamp;
-   tex_uint.filterMode     = cudaFilterModePoint;
-   tex_uint.normalized     = false;
-   cudaBindTextureToArray(tex_uint_ref, caCmap, &channelDesc);
+   cudaArray* caCmap = NULL;
+   prepareCudaTexture(cmapUint, &caCmap, texExt);
 
 }
 
@@ -874,10 +865,6 @@ int main( int argc, char** argv)
 
    atexit(cleanup);
 
-#ifdef _WIN32
-   setVSync(0) ; 
-#endif 
-
 
    glutMainLoop();
    cudaThreadExit();
@@ -929,7 +916,7 @@ int runDevicePropertiesQuery(int argc, char **argv)
       char* devName = gpuProp.name;
       int mjr = gpuProp.major;
       int mnr = gpuProp.minor;
-      int memMB = gpuProp.totalGlobalMem / (1024*1024) + 1;
+      int memMB = (int)(gpuProp.totalGlobalMem) / (1024*1024) + 1;
       if( dev==selectedDevice )
       {
          cout << "\t* ";

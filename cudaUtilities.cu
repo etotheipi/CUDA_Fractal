@@ -1,6 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include "cudaUtilities.h.cu"
+#include "cudaUtilities.cuh"
 
 // Timer variables
 unsigned int cpuTimerVariable;

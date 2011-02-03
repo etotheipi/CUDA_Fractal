@@ -37,26 +37,7 @@
 using namespace std;
 
 
-
-////////////////////////////////////////////////////////////////////////////////
-// Copy a 3D texture from a host (float*) array to a device cudaArray
-// The extent should be specified with all dimensions in units of *elements*
-template<typename T>
-inline void prepareCudaTexture(T* h_src, 
-                               cudaArray* d_dst,
-                               cudaExtent const & texExtent)
-{
-   cudaMemcpy3DParms copyParams = {0};
-   cudaPitchedPtr cppImgPsf = make_cudaPitchedPtr( (void*)h_src, 
-                                                   texExtent.width*sizeof(T),
-                                                   texExtent.width,  
-                                                   texExtent.height);
-   copyParams.srcPtr   = cppImgPsf;
-   copyParams.dstArray = d_dst;
-   copyParams.extent   = texExtent;
-   copyParams.kind     = cudaMemcpyHostToDevice;
-   cutilSafeCall( cudaMemcpy3D(&copyParams) );
-}
+//__constant__ unsigned char cmapDevConst[768];
 
 ////////////////////////////////////////////////////////////////////////////////
 // CPU timer pretty much measures real time (wall clock time).  GPU timer 
