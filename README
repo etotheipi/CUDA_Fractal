@@ -1,8 +1,30 @@
 
-Author:     Alan Reiner
+Author:     Alan Reiner  (USA)
 Orig Date:  05 Jan, 2011
 
-Last Update:  30 Jan, 2011
+Last Update:  03 Feb, 2011
+
+--------------------------------------------------------------------------------
+*** MAJOR UPDATE -- Integrated OpenGL with CUDA for interactive fractal viewing!
+--------------------------------------------------------------------------------
+Update  03 Feb, 2011
+
+After a tremendous amount of pain and frustration, it appears that NVIDIA does 
+not want any Windows users to get into CUDA.  They don't make their SDK compile 
+in MSVS 2008 or 2010, and normal constructs I can use in Linux fail miserably
+in Windows.  I had to do complete code re-organization to get this to work...
+
+With the exception of the mouse scroll wheel, the exact same code CUDA/OpenGL
+code that worked in Linux, also works in Windows.  That's nice... 
+
+At the moment there are two branches... I need to check out the win64 branch
+in Linux and see if I can get it working via preprocessor branches.  Then I'll
+be able to merge the win64 branch into the master and everyone should be happy!
+
+Then to start implementing new stuff!  Dynamic colormaps, new IFS functions,
+randomization...
+
+
 
 --------------------------------------------------------------------------------
 *** MAJOR UPDATE -- Integrated OpenGL with CUDA for interactive fractal viewing!
