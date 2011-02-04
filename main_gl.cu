@@ -130,7 +130,6 @@
 #include "cudaImageHost.h"
 #include "cudaImageDevice.cuh"
 #include "julia_kernel_cpu.h"
-#include "julia_kernel.cuh"
 #include "writePNG.h"
 #include "cudaUtilities.cuh"
 #include "colormap.h"
@@ -220,6 +219,29 @@ void writePngFile(unsigned int*, int, int, string, colormap<float,256>*);
 
 bool cpuRender = true;
 int  gpuRenderSM = 0;
+
+
+extern "C"
+void prepareCudaTexture(unsigned int* h_src, 
+                        cudaArray** d_dst,
+                        cudaExtent const & texExt);
+
+extern "C"
+void GenerateJuliaTile_z2plusc( dim3 grid,
+                                dim3 block,
+                                int  gpuRenderSM,
+                                unsigned int* devOutPtr,
+                                float cReal,
+                                float cImag,
+                                int    nTileRows,
+                                int    nTileCols,
+                                float  tileMinRe,
+                                float  tileMinIm,
+                                float  tileStepRe,
+                                float  tileStepIm,
+                                int    iterMaxEsc,
+                                unsigned char* devColormapData);
+
 
 ////////////////////////////////////////////////////////////////////////////////
 // Shader code taken directly from bilateralFilter.cpp in CUDA SDK 3.2
@@ -440,9 +462,9 @@ void displayFunction(void)
       //glBindBuffer(GL_PIXEL_UNPACK_BUFFER_ARB, gl_PBO);
       //glBufferData(GL_PIXEL_UNPACK_BUFFER_ARB, w * h * 4, h_Src, GL_STREAM_COPY);
 
-      GenerateJuliaTile_z2plusc_SM10<<<GRID, BLOCK>>>( 
       //GenerateJuliaTile_cexpz_SM20<<<GRID, BLOCK>>>( 
       //GenerateJuliaTile_other_SM20<<<GRID, BLOCK>>>( 
+      GenerateJuliaTile_z2plusc( GRID, BLOCK, gpuRenderSM,
                                        d_result,
                                        juliaC_real,
                                        juliaC_imag,
@@ -452,7 +474,8 @@ void displayFunction(void)
                                        imagMin,
                                        pxSize,
                                        pxSize,
-                                       fractalMaxIter) ;
+                                       fractalMaxIter,
+                                       NULL) ;
 
 
       // ******************************************************************** //
