@@ -36,9 +36,9 @@
 # Add source files here
 EXECUTABLE	:= JuliaExplorer
 # CUDA source files (compiled with cudacc)
-CUFILES		:= main_gl.cu  cudaUtilities.cu 
+CUFILES		:= main_gl.cu  cudaUtilities.cu julia_kernel.cu
 # CUDA dependency files
-CU_DEPS		:= cudaImageHost.h julia_kernel_cpu.h julia_kernel.h.cu colormap.h writePNG.h cudaUtilities.h.cu cudaComplex.h.cu
+CU_DEPS		:= cudaImageHost.h julia_kernel_cpu.h julia_kernel.cuh colormap.h writePNG.h cudaUtilities.cuh cudaComplex.cuh
 # C/C++ source files (compiled with gcc / c++)
 CCPFILES		:=
 
