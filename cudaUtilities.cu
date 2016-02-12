@@ -1,9 +1,15 @@
 #include <iostream>
 #include <fstream>
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+#include <helper_functions.h>
+#include <helper_timer.h>
+
 #include "cudaUtilities.cuh"
 
+
 // Timer variables
-unsigned int cpuTimerVariable;
+StopWatchInterface *gpuTimerObj=NULL;
 cudaEvent_t eventTimerStart;
 cudaEvent_t eventTimerStop;
 
@@ -15,9 +21,8 @@ cudaEvent_t eventTimerStop;
 void cpuStartTimer(void)
 {
    // GPU Timer Functions
-   cpuTimerVariable = 0;
-   cutCreateTimer( &cpuTimerVariable );
-   cutStartTimer(   cpuTimerVariable );
+   sdkCreateTimer( &gpuTimerObj );
+   sdkStartTimer(  &gpuTimerObj );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -25,9 +30,9 @@ void cpuStartTimer(void)
 // returns milliseconds
 float cpuStopTimer(void)
 {
-   cutStopTimer( cpuTimerVariable );
-   float cpuTime = cutGetTimerValue(cpuTimerVariable);
-   cutDeleteTimer( cpuTimerVariable );
+   sdkStopTimer( &gpuTimerObj  );
+   float cpuTime = sdkGetTimerValue( &gpuTimerObj );
+   sdkDeleteTimer( &gpuTimerObj );
    return cpuTime;
 }
 

@@ -5,7 +5,12 @@
 #include <fstream>
 #include <list>
 #include <string>
-#include <cutil_inline.h>
+
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+#include <helper_functions.h>
+#include <helper_timer.h>
+
 #include "cudaImageHost.h"
 
 

@@ -4,8 +4,6 @@
 
 #include <iostream>
 #include <stdio.h>
-#include <cutil_inline.h>
-#include <stopwatch.h>
 
 
 // MASSIVE SPEED HIT for using wrong integer-multiply for compute capability
@@ -15,6 +13,11 @@
    #define IMULTADD(a, b, c)     (__mul24(a,b) + (c))
 
 #elif __CUDA_ARCH__ == 200    // Device code path for compute capability 2.0
+
+   #define IMULT(a, b)           ((a)*(b))
+   #define IMULTADD(a, b, c)     ((a)*(b) + (c))
+
+#elif __CUDA_ARCH__ > 200    // Device code path for compute capability >2.0
 
    #define IMULT(a, b)           ((a)*(b))
    #define IMULTADD(a, b, c)     ((a)*(b) + (c))

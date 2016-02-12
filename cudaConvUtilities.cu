@@ -276,7 +276,10 @@ __global__ void  Image_SumReduceStep_Kernel( int* devBufIn,
                                              int  lastBlockSize)
 {  
    // ONLY USE THIS FUNCTION WITH BLOCK SIZE = (256,1,1);
-   // We write it for that to 
+   // NOTE: This method was originally written to use exactly the amt 
+   //       of shared memory available for each block, but I believe
+   //       I later was told that cmd args use shared mem, which would
+   //       result in this method spilling over.  Need to check on that.
    __shared__ char sharedMem[4096];
    int* shmBuf1 = (int*)sharedMem;
    int* shmBuf2 = (int*)&sharedMem[512];

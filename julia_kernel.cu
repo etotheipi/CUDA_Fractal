@@ -1,8 +1,12 @@
 #ifndef _JULIA_KERNEL_CU_
 #define _JULIA_KERNEL_CU_
 
-#include <cutil_inline.h>
-#include <cutil_math.h>
+
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+#include <helper_functions.h>
+#include <helper_timer.h>
+
 #include "cudaComplex.cuh"
 #include "cudaUtilities.cuh"
 
@@ -251,7 +255,7 @@ void prepareCudaTexture(unsigned int* h_src,
                                cudaExtent const & texExt)
 {
    cudaChannelFormatDesc channelDesc = cudaCreateChannelDesc<unsigned int>();
-   cutilSafeCall( cudaMalloc3DArray(d_dst, &channelDesc, texExt, 0) );
+   checkCudaErrors( cudaMalloc3DArray(d_dst, &channelDesc, texExt, 0) );
    cudaMemcpy3DParms copyParams = {0};
    cudaPitchedPtr cppImgPsf = make_cudaPitchedPtr( (void*)h_src, 
                                                    texExt.width*sizeof(unsigned int),
@@ -261,7 +265,7 @@ void prepareCudaTexture(unsigned int* h_src,
    copyParams.dstArray = *d_dst;
    copyParams.extent   = texExt;
    copyParams.kind     = cudaMemcpyHostToDevice;
-   cutilSafeCall( cudaMemcpy3D(&copyParams) );
+   checkCudaErrors( cudaMemcpy3D(&copyParams) );
 
    // Set texture parameters
    cudaGetTextureReference(&tex_uint_ref, "tex_uint");

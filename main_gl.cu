@@ -107,9 +107,12 @@
 #include <GL/wglew.h>
 #endif 
 
+#include <helper_cuda.h>
+#include <helper_cuda_gl.h>
+#include <helper_functions.h>
+#include <helper_timer.h>
+
 #include <cuda_runtime_api.h>
-#include <cutil_inline.h>
-#include <cutil_gl_inline.h>
 #include <cuda_gl_interop.h>
 #include <rendercheck_gl.h>
 
@@ -123,7 +126,6 @@
 #include <cmath>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stopwatch.h>
 #include <assert.h>
 
 
@@ -153,8 +155,6 @@ unsigned int timer;
 ////////////////////////////////////////////////////////////////////////////////
 //
 // Program main
-//
-// TODO:  Remove the CUTIL calls so libcutil is not required to compile/run
 //
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -294,7 +294,7 @@ void myInitCudaAndOpenGL(int w, int h, int* argc=NULL, char** argv=NULL)
    // [Re-]allocate device memory
    //if(gpu_d_img)
       //cudaFree(gpu_d_img);
-   //cutilSafeCall( cudaMalloc( (void**)&gpu_d_img, w*h*sizeof(unsigned int) ));
+   //checkCudaErrors( cudaMalloc( (void**)&gpu_d_img, w*h*sizeof(unsigned int) ));
 
    // [Re-]allocate some host memory and texture memory on device
    //if(gpu_h_img)
@@ -318,10 +318,10 @@ void myInitCudaAndOpenGL(int w, int h, int* argc=NULL, char** argv=NULL)
 
    
    // Register the cuda resource with the PBO
-   cutilSafeCall(cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource, 
+   checkCudaErrors(cudaGraphicsGLRegisterBuffer(&cuda_pbo_resource, 
                                 gl_PBO, 
                                 cudaGraphicsMapFlagsWriteDiscard));
-   //cutilSafeCall(cudaGraphicsGLUnregisterBuffer(&cuda_pbo_resource, 
+   //checkCudaErrors(cudaGraphicsGLUnregisterBuffer(&cuda_pbo_resource, 
                                 //gl_PBO, 
                                 //cudaGraphicsMapFlagsWriteDiscard));
 
@@ -453,9 +453,9 @@ void displayFunction(void)
    {
 
       unsigned int* d_result;
-      cutilSafeCall(cudaGraphicsMapResources(1, &cuda_pbo_resource, 0));
+      checkCudaErrors(cudaGraphicsMapResources(1, &cuda_pbo_resource, 0));
       size_t num_bytes; 
-      cutilSafeCall(cudaGraphicsResourceGetMappedPointer((void **)&d_result, 
+      checkCudaErrors(cudaGraphicsResourceGetMappedPointer((void **)&d_result, 
                                                       &num_bytes,  
 						                                    cuda_pbo_resource));
 
@@ -501,7 +501,7 @@ void displayFunction(void)
       // ******************************************************************** //
             
 
-      cutilSafeCall(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
+      checkCudaErrors(cudaGraphicsUnmapResources(1, &cuda_pbo_resource, 0));
 
       
       glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, gl_PBO);
@@ -799,10 +799,10 @@ void initData(int argc, char **argv)
 {
    // check for hardware double precision support
    int dev = 0;
-   cutGetCmdLineArgumenti(argc, (const char **) argv, "device", &dev);
+   getCmdLineArgumenti(argc, (const char **) argv, "device", &dev);
 
    cudaDeviceProp deviceProp;
-   cutilSafeCall(cudaGetDeviceProperties(&deviceProp, dev));
+   checkCudaErrors(cudaGetDeviceProperties(&deviceProp, dev));
    int version = deviceProp.major*10 + deviceProp.minor;
    if (version < 11) {
       printf("GPU compute capability is too low (1.0)\n Press Enter to exit the program\n") ;  
@@ -815,15 +815,15 @@ void initData(int argc, char **argv)
 
    // initialize some of the arguments    
    float x;
-   if (cutGetCmdLineArgumentf(argc, (const char **)argv, "xOff", &x)) 
+   if (getCmdLineArgumentf(argc, (const char **)argv, "xOff", &x)) 
    {
       //
    }
-   if (cutGetCmdLineArgumentf(argc, (const char **)argv, "yOff", &x)) 
+   if (getCmdLineArgumentf(argc, (const char **)argv, "yOff", &x)) 
    {
       //
    }
-   if (cutGetCmdLineArgumentf(argc, (const char **)argv, "scale", &x)) 
+   if (getCmdLineArgumentf(argc, (const char **)argv, "scale", &x)) 
    {
       //
    }
@@ -891,7 +891,7 @@ int main( int argc, char** argv)
 
    glutMainLoop();
    cudaThreadExit();
-   cutilExit(argc, argv);
+   //cutilExit(argc, argv);
    exit(EXIT_SUCCESS);
 }
 
@@ -902,7 +902,7 @@ int main( int argc, char** argv)
 int runDevicePropertiesQuery(int argc, char **argv)
 {
    int selectedDevice = -1;
-   cutGetCmdLineArgumenti(argc, (const char **) argv, "device", &selectedDevice);
+   //getCmdLineArgumentInt(argc, (const char **) argv, "device", &selectedDevice);
 
    cout << endl;
    cout << "****************************************";
@@ -926,7 +926,7 @@ int runDevicePropertiesQuery(int argc, char **argv)
    // Fastest device automatically selected.  Can override below
    if(selectedDevice == -1)
    {
-      selectedDevice = cutGetMaxGflopsDeviceId() ;
+      selectedDevice = gpuGetMaxGflopsDeviceId() ;
       cudaSetDevice(selectedDevice);
    }
    
